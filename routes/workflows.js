@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Workflow = require('../models/Workflow');
-const User = require('../models/User');
+const Employee = require('../models/Employee');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -51,8 +51,8 @@ router.get('/', async (req, res) => {
     const total = await Workflow.countDocuments(query);
 
     const workflows = await Workflow.find(query)
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email')
+      .populate('createdBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(startIndex);
@@ -94,10 +94,10 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const workflow = await Workflow.findById(req.params.id)
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email')
-      .populate('steps.assignedTo', 'name email')
-      .populate('comments.user', 'name email');
+      .populate('createdBy', 'fullName email')
+      .populate('assignedTo', 'fullName email')
+      .populate('steps.assignedTo', 'fullName email')
+      .populate('comments.user', 'fullName email');
 
     if (!workflow) {
       return res.status(404).json({

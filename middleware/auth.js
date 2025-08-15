@@ -17,9 +17,27 @@ const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.employee = await Employee.findById(decoded.id).select('-password');
+    const employee = await Employee.findById(decoded.id).select('-password');
+    
+    if (!employee) {
+      return res.status(401).json({
+        success: false,
+        message: 'Employee not found'
+      });
+    }
+
+    // Set both employee and user for compatibility
+    req.employee = employee;
+    req.user = {
+      id: employee._id,
+      name: employee.fullName,
+      email: employee.email,
+      role: employee.designation === 'admin' ? 'admin' : 'user' // Map designation to role
+    };
+    
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error);
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'

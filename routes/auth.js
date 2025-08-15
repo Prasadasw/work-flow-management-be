@@ -58,30 +58,49 @@ router.post('/register', async (req, res) => {
 // Login Employee
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', { email: req.body.email });
+    
     const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
+    }
 
     // Check if employee exists
     const employee = await Employee.findOne({ email }).select('+password');
     if (!employee) {
+      console.log('Employee not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
+    console.log('Employee found:', employee.email);
+
     // Check password
     const isMatch = await employee.matchPassword(password);
     if (!isMatch) {
+      console.log('Password mismatch for:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
+
+    console.log('Password matched for:', email);
 
     // Create token
     const token = jwt.sign({ id: employee._id }, process.env.JWT_SECRET, {
       expiresIn: '30d'
     });
+
+    console.log('Token created successfully for:', email);
 
     res.json({
       success: true,
@@ -97,6 +116,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
